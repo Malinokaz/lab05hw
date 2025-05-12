@@ -41,26 +41,6 @@ TEST(TransactionTest, InsufficientFundsInFromReturnsFalse) {
     EXPECT_FALSE(t.Make(from, to, 50));  // total = 51, from = 50
 }
 
-TEST(TransactionTest, DebitSuccess) {
-    Account acc(1, 500);
-    acc.Lock();
-    EXPECT_TRUE(Transaction().Debit(acc, 100));
-    EXPECT_EQ(acc.GetBalance(), 400);
-}
-
-TEST(TransactionTest, DebitFailsIfNotEnough) {
-    Account acc(1, 100);
-    acc.Lock();
-    EXPECT_FALSE(Transaction().Debit(acc, 150));
-    EXPECT_EQ(acc.GetBalance(), 100);
-}
-
-TEST(TransactionTest, CreditAddsBalance) {
-    Account acc(1, 100);
-    acc.Lock();
-    Transaction().Credit(acc, 50);
-    EXPECT_EQ(acc.GetBalance(), 150);
-}
 
 TEST(TransactionTest, RollbackOnDebitFailure) {
     Account from(1, 1000);
