@@ -31,7 +31,8 @@ jobs:
     - name: Generate coverage report
       run: |
         cd build
-        geninfo --output-filename coverage.info --ignore-errors mismatch .
+        geninfo --output-filename coverage_raw.info --ignore-errors mismatch .
+        lcov --remove coverage_raw.info '/usr/*' '*/third-party/*' '*/gtest/*' --output-file coverage.info
         genhtml coverage.info --output-directory coverage_html
 
     - name: Upload to Coveralls
