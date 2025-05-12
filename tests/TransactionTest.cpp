@@ -33,6 +33,7 @@ TEST(TransactionTest, FeeTooBigReturnsFalse) {
     Account from(1, 1000), to(2, 0);
     Transaction t;
     EXPECT_FALSE(t.Make(from, to, 1));  
+}
 
 TEST(TransactionTest, InsufficientFundsInFromReturnsFalse) {
     Account from(1, 100);
