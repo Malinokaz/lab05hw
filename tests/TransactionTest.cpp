@@ -32,21 +32,21 @@ TEST(TransactionTest, TooSmallAmountThrows) {
 TEST(TransactionTest, FeeTooBigReturnsFalse) {
     Account from(1, 1000), to(2, 0);
     Transaction t;
-    EXPECT_FALSE(t.Make(from, to, 1));  // fee = 1 → fee*2 > 1
-}
+    EXPECT_FALSE(t.Make(from, to, 1));  
 
 TEST(TransactionTest, InsufficientFundsInFromReturnsFalse) {
-    Account from(1, 50), to(2, 0);
+    Account from(1, 100);
+    Account to(2, 0);
     Transaction t;
-    EXPECT_FALSE(t.Make(from, to, 50));  // total = 51, from = 50
+    EXPECT_FALSE(t.Make(from, to, 100)); 
 }
 
 
 TEST(TransactionTest, RollbackOnDebitFailure) {
     Account from(1, 1000);
-    Account to(2, 10);  // too low to hold 110
+    Account to(2, 10); 
     Transaction t;
-    EXPECT_FALSE(t.Make(from, to, 1100));  // Debit should fail
+    EXPECT_FALSE(t.Make(from, to, 1100));  
     EXPECT_EQ(from.GetBalance(), 1000);
     EXPECT_EQ(to.GetBalance(), 10);
 }
