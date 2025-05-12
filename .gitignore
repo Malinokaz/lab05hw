@@ -1,0 +1,15 @@
+/build
+/CMakeFiles
+CMakeCache.txt
+Makefile
+*.cmake
+*.gcda
+*.gcno
+*.gcov
+/coverage
+/test/banking_test
+*.swp
+*.swo
+*.DS_Store
+.idea/
+/.vscode/
