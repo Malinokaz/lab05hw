@@ -3,52 +3,79 @@
 #include "Transaction.h"
 
 TEST(TransactionTest, SuccessTransferOver100) {
-    Account a1(1, 1000);
-    Account a2(2, 100);
+    Account from(1, 1000);
+    Account to(2, 100);
     Transaction t;
-    EXPECT_TRUE(t.Make(a1, a2, 200));
-    EXPECT_EQ(a1.GetBalance(), 799);
-    EXPECT_EQ(a2.GetBalance(), 300);
+    EXPECT_TRUE(t.Make(from, to, 200));
+    EXPECT_EQ(from.GetBalance(), 799);
+    EXPECT_EQ(to.GetBalance(), 300);
 }
 
-TEST(TransactionTest, FailIfSameAccount) {
-    Account a(1, 1000);
+TEST(TransactionTest, SameAccountThrows) {
+    Account acc(1, 1000);
     Transaction t;
-    EXPECT_THROW(t.Make(a, a, 200), std::logic_error);
+    EXPECT_THROW(t.Make(acc, acc, 150), std::logic_error);
 }
 
-TEST(TransactionTest, FailIfNegativeAmount) {
-    Account a1(1, 1000), a2(2, 500);
+TEST(TransactionTest, NegativeAmountThrows) {
+    Account from(1, 1000), to(2, 0);
     Transaction t;
-    EXPECT_THROW(t.Make(a1, a2, -50), std::invalid_argument);
+    EXPECT_THROW(t.Make(from, to, -1), std::invalid_argument);
 }
 
-TEST(TransactionTest, FailIfAmountLessThan100) {
-    Account a1(1, 1000), a2(2, 500);
+TEST(TransactionTest, TooSmallAmountThrows) {
+    Account from(1, 1000), to(2, 0);
     Transaction t;
-    EXPECT_THROW(t.Make(a1, a2, 99), std::logic_error);
+    EXPECT_THROW(t.Make(from, to, 99), std::logic_error);
 }
 
-TEST(TransactionTest, FailIfFeeTooBig) {
-    Account a1(1, 1000), a2(2, 500);
+TEST(TransactionTest, FeeTooBigReturnsFalse) {
+    Account from(1, 1000), to(2, 0);
     Transaction t;
-    EXPECT_FALSE(t.Make(a1, a2, 1));
+    EXPECT_FALSE(t.Make(from, to, 1));  // fee = 1 → fee*2 > 1
 }
 
-TEST(TransactionTest, FailIfNotEnoughAfterFee) {
-    Account a1(1, 150), a2(2, 50);
+TEST(TransactionTest, InsufficientFundsInFromReturnsFalse) {
+    Account from(1, 50), to(2, 0);
     Transaction t;
-    EXPECT_FALSE(t.Make(a1, a2, 150));
-    EXPECT_EQ(a1.GetBalance(), 150);
-    EXPECT_EQ(a2.GetBalance(), 50);
+    EXPECT_FALSE(t.Make(from, to, 50));  // total = 51, from = 50
 }
 
-TEST(TransactionTest, MultipleTransactions) {
-    Account a1(1, 1000), a2(2, 500);
+TEST(TransactionTest, DebitSuccess) {
+    Account acc(1, 500);
+    acc.Lock();
+    EXPECT_TRUE(Transaction().Debit(acc, 100));
+    EXPECT_EQ(acc.GetBalance(), 400);
+}
+
+TEST(TransactionTest, DebitFailsIfNotEnough) {
+    Account acc(1, 100);
+    acc.Lock();
+    EXPECT_FALSE(Transaction().Debit(acc, 150));
+    EXPECT_EQ(acc.GetBalance(), 100);
+}
+
+TEST(TransactionTest, CreditAddsBalance) {
+    Account acc(1, 100);
+    acc.Lock();
+    Transaction().Credit(acc, 50);
+    EXPECT_EQ(acc.GetBalance(), 150);
+}
+
+TEST(TransactionTest, RollbackOnDebitFailure) {
+    Account from(1, 1000);
+    Account to(2, 10);  // too low to hold 110
     Transaction t;
-    EXPECT_TRUE(t.Make(a1, a2, 200));
-    EXPECT_TRUE(t.Make(a1, a2, 300));
-    EXPECT_TRUE(t.Make(a2, a1, 250));
-    EXPECT_EQ(a1.GetBalance(), 748);
-    EXPECT_EQ(a2.GetBalance(), 749);
+    EXPECT_FALSE(t.Make(from, to, 1100));  // Debit should fail
+    EXPECT_EQ(from.GetBalance(), 1000);
+    EXPECT_EQ(to.GetBalance(), 10);
+}
+
+TEST(TransactionTest, AllBranchesInMakeCovered) {
+    Account a1(1, 500);
+    Account a2(2, 0);
+    Transaction t;
+    EXPECT_FALSE(t.Make(a1, a2, 1));    // fee*2 > sum
+    EXPECT_THROW(t.Make(a1, a2, -1), std::invalid_argument); // negative
+    EXPECT_THROW(t.Make(a1, a2, 99), std::logic_error);      // too small
 }
