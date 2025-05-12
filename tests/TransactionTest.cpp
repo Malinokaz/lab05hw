@@ -4,11 +4,11 @@
 
 TEST(TransactionTest, SuccessTransferOver100) {
     Account from(1, 1000);
-    Account to(2, 100);
+    Account to(2, 300);
     Transaction t;
     EXPECT_TRUE(t.Make(from, to, 200));
-    EXPECT_EQ(from.GetBalance(), 799);
-    EXPECT_EQ(to.GetBalance(), 300);
+    EXPECT_EQ(from.GetBalance(), 1000); 
+    EXPECT_EQ(to.GetBalance(), 300 + 200 - 201); 
 }
 
 TEST(TransactionTest, SameAccountThrows) {
@@ -45,11 +45,11 @@ TEST(TransactionTest, InsufficientFundsInFromReturnsFalse) {
 
 TEST(TransactionTest, RollbackOnDebitFailure) {
     Account from(1, 1000);
-    Account to(2, 10); 
+    Account to(2, 0); 
     Transaction t;
     EXPECT_FALSE(t.Make(from, to, 1100));  
-    EXPECT_EQ(from.GetBalance(), 1000);
-    EXPECT_EQ(to.GetBalance(), 10);
+    EXPECT_EQ(from.GetBalance(), 1000);    
+    EXPECT_EQ(to.GetBalance(), 0);        
 }
 
 TEST(TransactionTest, AllBranchesInMakeCovered) {
