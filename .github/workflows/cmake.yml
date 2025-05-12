@@ -1,0 +1,40 @@
+name: Cmake
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get install -y cmake g++ lcov
+
+    - name: Configure with CMake
+      run: cmake -S . -B build -DBUILD_TESTS=ON
+
+    - name: Build
+      run: cmake --build build
+
+    - name: Run tests
+      run: ./build/banking_test
+
+    - name: Generate coverage report
+      run: |
+        cd build
+        lcov --directory . --capture --output-file coverage.info
+        lcov --remove coverage.info '/usr/*' --output-file coverage.info
+        lcov --list coverage.info
+
+    - name: Upload to Coveralls
+      uses: coverallsapp/github-action@v2
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: build/coverage.info
